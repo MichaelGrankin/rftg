@@ -22,7 +22,7 @@ AM_INIT_AUTOMAKE([1.9])
 AC_PROG_CC
 
 AC_CHECK_LIB([m], [exp])
-
+AC_CHECK_LIB([z], [exp])
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdio.h])
 

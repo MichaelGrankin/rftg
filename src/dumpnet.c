@@ -25,17 +25,18 @@
 int main(int argc, char *argv[])
 {
 	net learner;
-	FILE *fff;
+	gzFile fff;
 	int input, hidden, output;
 	int i, j;
 	double *start;
 	char buf[1024], *ptr;
 
-	fff = fopen(argv[1], "r");
+	fff = gzopen(argv[1], "rb");
 
-	if (!fgets(buf, 1024, fff)) return 1;
+	if (!gzgets(fff, buf, 1024)) return 1;
 
-	fclose(fff);
+	gzclose(fff);
+
 
 	if (sscanf(buf, "%d %d %d", &input, &hidden, &output) != 3) return 1;
 

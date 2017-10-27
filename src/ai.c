@@ -127,14 +127,14 @@ static void ai_initialize(game *g, int who, double factor)
 #endif
 
 	/* Create evaluator filename */
-	sprintf(fname, RFTGDIR "/network/rftg.eval.%d.%d%s.net", g->expanded,
+	sprintf(fname, RFTGDIR "/network/rftg.eval.%d.%d%s.net.gz", g->expanded,
 	        g->num_players, g->advanced ? "a" : "");
 
 	/* Attempt to load network weights from disk */
 	if (load_net(&eval, fname))
 	{
 		/* Try looking under current directory */
-		sprintf(fname, "network/rftg.eval.%d.%d%s.net", g->expanded,
+		sprintf(fname, "network/rftg.eval.%d.%d%s.net.gz", g->expanded,
 		        g->num_players, g->advanced ? "a" : "");
 
 		/* Attempt to load again */
@@ -156,14 +156,14 @@ static void ai_initialize(game *g, int who, double factor)
 #endif
 
 	/* Create predictor filename */
-	sprintf(fname, RFTGDIR "/network/rftg.role.%d.%d%s.net", g->expanded,
+	sprintf(fname, RFTGDIR "/network/rftg.role.%d.%d%s.net.gz", g->expanded,
 	        g->num_players, g->advanced ? "a" : "");
 
 	/* Attempt to load network weights from disk */
 	if (load_net(&role, fname))
 	{
 		/* Try looking under current directory */
-		sprintf(fname, "network/rftg.role.%d.%d%s.net", g->expanded,
+		sprintf(fname, "network/rftg.role.%d.%d%s.net.gz", g->expanded,
 		        g->num_players, g->advanced ? "a" : "");
 
 		/* Attempt to load again */

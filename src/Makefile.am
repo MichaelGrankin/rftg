@@ -17,9 +17,9 @@ ai_client_SOURCES = ai_client.c engine.c init.c ai.c net.c net.h rftg.h comm.c \
 dist_pkgdata_DATA = cards.txt campaign.txt images.data
 
 AM_CFLAGS = -Wall
-
+AM_LDFLAGS = -lz
 rftg_CFLAGS = -Wall @GTK_CFLAGS@ @GTK_MAC_CFLAGS@ -DRFTGDIR=\"$(pkgdatadir)\"
-rftg_LDADD = @GTK_LIBS@ @GTK_MAC_LIBS@
+rftg_LDADD = @GTK_LIBS@ @GTK_MAC_LIBS@ 
 
 rftgserver_CFLAGS = -Wall -DRFTGDIR=\"$(pkgdatadir)\" -DBINDIR=\"$(bindir)\"
 rftgserver_LDADD = -lmysqlclient -lpthread

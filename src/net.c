@@ -576,19 +576,20 @@ void free_net(net *learn)
  */
 int load_net(net *learn, char *fname)
 {
-	FILE *fff;
+	gzFile fff;
 	int i, j;
 	int input, hidden, output;
-	char name[80];
+	char name[80], buf[80];
 
 	/* Open weights file */
-	fff = fopen(fname, "r");
+	fff = gzopen(fname, "rb");
 
 	/* Check for failure */
 	if (!fff) return -1;
 
 	/* Read network size from file */
-	if (fscanf(fff, "%d %d %d\n", &input, &hidden, &output) != 3) return -1;
+	gzgets(fff, buf, 80);
+	if (sscanf(buf, "%d %d %d\n", &input, &hidden, &output) != 3) return -1;
 
 	/* Check for mismatch */
 	if (input != learn->num_inputs ||
@@ -596,13 +597,14 @@ int load_net(net *learn, char *fname)
 	    output != learn->num_output) return -1;
 
 	/* Read number of training iterations */
-	if (fscanf(fff, "%d\n", &learn->num_training) != 1) return -1;
+	gzgets(fff, buf, 80);
+	if (sscanf(buf, "%d\n", &learn->num_training) != 1) return -1;
 
 	/* Loop over input names */
 	for (i = 0; i < learn->num_inputs; i++)
 	{
 		/* Read an input name */
-		if (!fgets(name, 80, fff)) return -1;
+		if (!gzgets(fff, name, 80)) return -1;
 
 		/* Strip newline */
 		name[strlen(name) - 1] = '\0';
@@ -629,7 +631,8 @@ int load_net(net *learn, char *fname)
 		for (j = 0; j < learn->num_inputs + 1; j++)
 		{
 			/* Load a weight */
-			if (fscanf(fff, "%lf\n",
+			gzgets(fff, buf, 80);
+			if (sscanf(buf, "%lf\n",
 			           &learn->hidden_weight[j][i]) != 1) return -1;
 		}
 	}
@@ -641,13 +644,14 @@ int load_net(net *learn, char *fname)
 		for (j = 0; j < learn->num_hidden + 1; j++)
 		{
 			/* Load a weight */
-			if (fscanf(fff, "%lf\n",
+			gzgets(fff, buf, 80);
+			if (sscanf(buf, "%lf\n",
 			           &learn->output_weight[j][i]) != 1) return -1;
 		}
 	}
 
 	/* Done */
-	fclose(fff);
+	gzclose(fff);
 
 	/* Success */
 	return 0;
@@ -658,18 +662,18 @@ int load_net(net *learn, char *fname)
  */
 void save_net(net *learn, char *fname)
 {
-	FILE *fff;
+	gzFile fff;
 	int i, j;
 
 	/* Open output file */
-	fff = fopen(fname, "w");
+	fff = gzopen(fname, "wb");
 
 	/* Save network size */
-	fprintf(fff, "%d %d %d\n", learn->num_inputs, learn->num_hidden,
+	gzprintf(fff, "%d %d %d\n", learn->num_inputs, learn->num_hidden,
 	                           learn->num_output);
 
 	/* Save training iterations */
-	fprintf(fff, "%d\n", learn->num_training);
+	gzprintf(fff, "%d\n", learn->num_training);
 
 	/* Loop over inputs */
 	for (i = 0; i < learn->num_inputs; i++)
@@ -678,12 +682,12 @@ void save_net(net *learn, char *fname)
 		if (!learn->input_name[i])
 		{
 			/* Write empty string */
-			fprintf(fff, "\n");
+			gzprintf(fff, "\n");
 		}
 		else
 		{
 			/* Save input name */
-			fprintf(fff, "%s\n", learn->input_name[i]);
+			gzprintf(fff, "%s\n", learn->input_name[i]);
 		}
 	}
 
@@ -694,7 +698,7 @@ void save_net(net *learn, char *fname)
 		for (j = 0; j < learn->num_inputs + 1; j++)
 		{
 			/* Save a weight */
-			fprintf(fff, "%.12le\n", learn->hidden_weight[j][i]);
+			gzprintf(fff, "%.12le\n", learn->hidden_weight[j][i]);
 		}
 	}
 
@@ -705,10 +709,10 @@ void save_net(net *learn, char *fname)
 		for (j = 0; j < learn->num_hidden + 1; j++)
 		{
 			/* Save a weight */
-			fprintf(fff, "%.12le\n", learn->output_weight[j][i]);
+			gzprintf(fff, "%.12le\n", learn->output_weight[j][i]);
 		}
 	}
 
 	/* Done */
-	fclose(fff);
+	gzclose(fff);
 }
