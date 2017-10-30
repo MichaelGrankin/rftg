@@ -6,8 +6,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rftg", "rftg.vcxproj", "{F9
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "installer", "installer\installer.vdproj", "{181752F1-E410-4792-A7D9-6EE0F5F4932F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zipnet", "..\zipnet\zipnet.vcxproj", "{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -37,18 +35,6 @@ Global
 		{181752F1-E410-4792-A7D9-6EE0F5F4932F}.Release|Win32.Build.0 = Release
 		{181752F1-E410-4792-A7D9-6EE0F5F4932F}.Release|x64.ActiveCfg = Release
 		{181752F1-E410-4792-A7D9-6EE0F5F4932F}.Release|x64.Build.0 = Release
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Debug|Win32.ActiveCfg = Debug|Win32
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Debug|Win32.Build.0 = Debug|Win32
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Debug|x64.ActiveCfg = Debug|x64
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Debug|x64.Build.0 = Debug|x64
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Learner|Win32.ActiveCfg = Release|Win32
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Learner|Win32.Build.0 = Release|Win32
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Learner|x64.ActiveCfg = Release|x64
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Learner|x64.Build.0 = Release|x64
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Release|Win32.ActiveCfg = Release|Win32
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Release|Win32.Build.0 = Release|Win32
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Release|x64.ActiveCfg = Release|x64
-		{C4AFB4CB-C9F9-41F9-B05C-2F423BE9BA36}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
