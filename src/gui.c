@@ -23,6 +23,7 @@
 
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
+#include <math.h>
 #include "rftg.h"
 #include "client.h"
 #include "comm.h"
@@ -462,7 +463,7 @@ static int action_cidx, action_oidx;
 /*
  * Number of icon images.
  */
-#define MAX_ICON 25
+#define MAX_ICON 28
 
 /*
  * Special icon numbers.
@@ -482,6 +483,9 @@ static int action_cidx, action_oidx;
 #define ICON_DRAW_EMPTY 22
 #define ICON_EXPLORE    23
 #define ICON_CONSUME    24
+#define ICON_VULN_R     25
+#define ICON_VULN_I     26
+#define ICON_VULN_RI    27
 
 /*
  * Icon states.
@@ -4694,8 +4698,26 @@ static void redraw_status_area(int who, GtkWidget *box)
 
 	if (strlen(s_ptr->military_tip))
 	{
+		int icon;
+		double prop;
+
+		icon = ICON_MILITARY;
+		
+		/* If takovers are enabled and playing RvI or BoW, show vulnerabilities on the Military icon */
+		if (exp_info[real_game.expanded].has_takeovers && !opt.disable_takeover)
+		{
+			if (status_player[who].military.military_rebel && status_player[who].military.imperium)
+				icon = ICON_VULN_RI;
+			else if (status_player[who].military.military_rebel)
+				icon = ICON_VULN_R;
+			else if (status_player[who].military.imperium)
+				icon = ICON_VULN_I;
+
+			width = round(height * 1.05); //Military icon dimensions are 420:400, so 1.05 factor
+		}
+
 		/* Create military icon image */
-		buf = gdk_pixbuf_scale_simple(icon_cache[ICON_MILITARY], height, height,
+		buf = gdk_pixbuf_scale_simple(icon_cache[icon], width, height,
 		                              GDK_INTERP_BILINEAR);
 
 		/* Create image from pixbuf */
