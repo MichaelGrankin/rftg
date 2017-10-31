@@ -16,7 +16,7 @@ xcopy "..\..\src\README" "%OutDir%\" /y
 xcopy "..\..\src\cards.txt" "%OutDir%\" /y
 xcopy "..\..\src\campaign.txt" "%OutDir%\" /y
 xcopy "..\..\src\images.data" "%OutDir%\" /y
-xcopy "..\..\src\network\*.net" "%OutDir%\network\" /i /y
+xcopy "..\..\src\network\*.net.gz" "%OutDir%\network\" /i /y
 xcopy "..\..\3rdparty\win\*" "%OutDir%\" /i /s /y
 xcopy "rftg.ico" "%OutDir%\" /y
 xcopy "rftg" "%AppData%\" /y

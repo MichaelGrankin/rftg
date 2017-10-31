@@ -184,12 +184,20 @@ static char *player_colors[MAX_PLAYER] =
 #define GOALM_WIDTH 296
 #define GOALM_HEIGHT 447
 
+ /*
+ * Military icon size
+ */
+#define MIL_WIDTH 420
+#define MIL_HEIGHT 400
+
 /*
  * Colors to highlight with.
  */
 #define HIGH_NONE   0
 #define HIGH_YELLOW 1
 #define HIGH_RED    2
+
+
 
 /*
  * Information about a displayed card.
@@ -4699,7 +4707,6 @@ static void redraw_status_area(int who, GtkWidget *box)
 	if (strlen(s_ptr->military_tip))
 	{
 		int icon;
-		double prop;
 
 		icon = ICON_MILITARY;
 		
@@ -4712,9 +4719,9 @@ static void redraw_status_area(int who, GtkWidget *box)
 				icon = ICON_VULN_R;
 			else if (status_player[who].military.imperium)
 				icon = ICON_VULN_I;
-
-			width = round(height * 1.05); //Military icon dimensions are 420:400, so 1.05 factor
 		}
+
+		width = round(height * MIL_WIDTH / MIL_HEIGHT);
 
 		/* Create military icon image */
 		buf = gdk_pixbuf_scale_simple(icon_cache[icon], width, height,
@@ -9885,6 +9892,29 @@ static void gui_notify_rotation(game *g, int who)
 }
 
 /*
+ * Wrapper to g_get_user_config to accomodate default dir
+ * "AppData/Race for the Galaxy" for autosave and congig saving
+ * purposes on Windows
+ */
+static char* get_user_config_dir(void)
+{
+	char *config_dir;
+#ifdef _WIN32
+	/* If no autosave folder specified, save to Roaming/appdata */
+	config_dir = g_build_filename(g_get_user_config_dir(), "Race for the Galaxy", NULL);
+
+	/* Create folder in AppData if not existing */
+	if (!g_file_test(config_dir, G_FILE_TEST_EXISTS))
+		g_mkdir(config_dir, NULL);
+#else
+	/* Build full file name */
+	config_dir = get_user_config_dir();
+#endif
+
+	return config_dir;
+}
+
+/*
  * Auto save during the game.
  */
 static void auto_save_choice(game *g, int who)
@@ -9894,9 +9924,15 @@ static void auto_save_choice(game *g, int who)
 	/* Check for autosave disabled */
 	if (client_state != CS_DISCONN || !opt.auto_save) return;
 
+#ifdef _WIN32
+	/* Build full file name to the Appdata/Race for the galaxy dir */
+	full_name = g_build_filename(opt.data_folder ? opt.data_folder : get_user_config_dir(),
+		"autosave.rftg", NULL);
+#else
 	/* Build full file name */
 	full_name = g_build_filename(opt.data_folder ? opt.data_folder : RFTGDIR,
-	                             "autosave.rftg", NULL);
+		"autosave.rftg", NULL);
+#endif
 
 	/* Save to file */
 	if (save_game(g, full_name, who) < 0)
@@ -9923,19 +9959,25 @@ static void auto_save_end(game *g, int who)
 	/* Check for autosave disabled */
 	if (client_state != CS_DISCONN || !opt.auto_save) return;
 
-	/* Build file name of choice save file */
-	full_name = g_build_filename(opt.data_folder ? opt.data_folder : RFTGDIR,
-	                             "autosave.rftg", NULL);
+	///* Build file name of choice save file */
+	//full_name = g_build_filename(opt.data_folder ? opt.data_folder : RFTGDIR,
+	//                             "autosave.rftg", NULL);
 
-	/* Delete the choice save file */
-	unlink(full_name);
+	///* Delete the choice save file */
+	//unlink(full_name);
 
-	/* Destroy filename */
-	g_free(full_name);
+	///* Destroy filename */
+	//g_free(full_name);
 
+#ifdef _WIN32
+	/* Build full file name to the Appdata/Race for the galaxy dir */
+	full_name = g_build_filename(opt.data_folder ? opt.data_folder : get_user_config_dir(),
+		"autosave_end.rftg", NULL);
+#else
 	/* Build file name of end auto save file */
 	full_name = g_build_filename(opt.data_folder ? opt.data_folder : RFTGDIR,
-	                             "autosave_end.rftg", NULL);
+		"autosave_end.rftg", NULL);
+#endif
 
 	/* Save to file */
 	if (save_game(g, full_name, who) < 0)
@@ -9960,9 +10002,15 @@ static int load_auto_save(game *g)
 	char *full_name;
 	int i;
 
+#ifdef _WIN32
+	/* Build full file name to the Appdata/Race for the galaxy dir */
+	full_name = g_build_filename(opt.data_folder ? opt.data_folder : get_user_config_dir(),
+		"autosave.rftg", NULL);
+#else
 	/* Build full file name */
 	full_name = g_build_filename(opt.data_folder ? opt.data_folder : RFTGDIR,
-	                             "autosave.rftg", NULL);
+		"autosave.rftg", NULL);
+#endif
 
 	/* Loop over players */
 	for (i = 0; i < MAX_PLAYER; i++)
@@ -10975,13 +11023,14 @@ static void read_prefs(void)
 	size_t num_servers;
 	int i, server_1 = FALSE, server_2 = FALSE;
 	GtkTreeIter list_iter;
+	GError *error = NULL;
 
 	/* Build user preference filename */
 #ifdef __APPLE__
 	path = g_build_filename(g_get_home_dir(),
 	                        "Library/Preferences/net.keldon.rftg", NULL);
 #else
-	path = g_build_filename(g_get_user_config_dir(), "rftg", NULL);
+	path = g_build_filename(get_user_config_dir(), "rftg", NULL);
 #endif
 
 	/* Create keyfile structure */
@@ -11040,7 +11089,7 @@ static void read_prefs(void)
 	opt.auto_select = g_key_file_get_boolean(pref_file, "gui",
 	                                         "auto_select", NULL);
 	opt.auto_save = g_key_file_get_boolean(pref_file, "gui",
-	                                       "auto_save", NULL);
+	                                       "auto_save", &error);
 	opt.export_cards = g_key_file_get_boolean(pref_file, "gui",
 	                                          "export_cards", NULL);
 
@@ -11197,6 +11246,15 @@ static gboolean retrieve_servers(GtkTreeModel *model, GtkTreePath *path,
 }
 
 /*
+* Auxilary function that doesn't save empty strings, so no errors by GTK are raised
+*/
+void _key_file_set_string(GKeyFile *pref, const char *section, const char *key, const char *str)
+{
+	if (str)
+		g_key_file_set_string(pref_file, section, key, str);
+}
+
+/*
  * Save preferences to file.
  */
 void save_prefs(void)
@@ -11212,7 +11270,7 @@ void save_prefs(void)
 	path = g_build_filename(g_get_home_dir(),
 	                        "Library/Preferences/net.keldon.rftg", NULL);
 #else
-	path = g_build_filename(g_get_user_config_dir(), "rftg", NULL);
+	path = g_build_filename(get_user_config_dir(), "rftg", NULL);
 #endif
 
 	/* Allocate memory to store server names */
@@ -11226,7 +11284,7 @@ void save_prefs(void)
 	/* Set game options */
 	g_key_file_set_integer(pref_file, "game", "num_players",
 	                       opt.num_players);
-	g_key_file_set_string(pref_file, "game", "name", opt.player_name);
+	_key_file_set_string(pref_file, "game", "name", opt.player_name);
 	g_key_file_set_integer(pref_file, "game", "expansion", opt.expanded);
 	g_key_file_set_boolean(pref_file, "game", "advanced", opt.advanced);
 	g_key_file_set_boolean(pref_file, "game", "promo", opt.promo);
@@ -11235,7 +11293,7 @@ void save_prefs(void)
 	                       opt.disable_takeover);
 
 	/* Set campaign (if any) */
-	g_key_file_set_string(pref_file, "game", "campaign", opt.campaign_name);
+	_key_file_set_string(pref_file, "game", "campaign", opt.campaign_name);
 
 	/* Set GUI options */
 	g_key_file_set_integer(pref_file, "gui", "full_reduced",
@@ -11270,23 +11328,23 @@ void save_prefs(void)
 	                       opt.discard_log);
 
 	/* Set folder location options */
-	g_key_file_set_string(pref_file, "folders", "last_save",
+	_key_file_set_string(pref_file, "folders", "last_save",
 	                      opt.last_save);
-	g_key_file_set_string(pref_file, "folders", "data_folder",
+	_key_file_set_string(pref_file, "folders", "data_folder",
 	                      opt.data_folder);
-	g_key_file_set_string(pref_file, "folders", "export_folder",
+	_key_file_set_string(pref_file, "folders", "export_folder",
 	                      opt.export_folder);
 
 	/* Set multiplayer options */
-	g_key_file_set_string(pref_file, "multiplayer", "server_name",
+	_key_file_set_string(pref_file, "multiplayer", "server_name",
 	                      opt.server_name);
 	g_key_file_set_integer(pref_file, "multiplayer", "server_port",
 	                       opt.server_port);
 	g_key_file_set_string_list(pref_file, "multiplayer", "servers",
 	                           (const gchar* const*) servers, num_servers);
-	g_key_file_set_string(pref_file, "multiplayer", "username",
+	_key_file_set_string(pref_file, "multiplayer", "username",
 	                      opt.username);
-	g_key_file_set_string(pref_file, "multiplayer", "password",
+	_key_file_set_string(pref_file, "multiplayer", "password",
 	                      opt.password);
 
 	/* Clean up servers memory */
@@ -11294,9 +11352,9 @@ void save_prefs(void)
 	free(servers);
 
 	/* Set multiplayer game creation options */
-	g_key_file_set_string(pref_file, "multiplayer", "game_desc",
+	_key_file_set_string(pref_file, "multiplayer", "game_desc",
 	                      opt.game_desc);
-	g_key_file_set_string(pref_file, "multiplayer", "game_pass",
+	_key_file_set_string(pref_file, "multiplayer", "game_pass",
 	                      opt.game_pass);
 	g_key_file_set_integer(pref_file, "multiplayer", "min_player",
 	                       opt.multi_min);
@@ -11304,11 +11362,11 @@ void save_prefs(void)
 	                       opt.multi_max);
 
 	/* Set export options */
-	g_key_file_set_string(pref_file, "export", "style_sheet",
+	_key_file_set_string(pref_file, "export", "style_sheet",
 	                      opt.export_style_sheet);
 
 	/* Open file for writing */
-	fff = fopen(path, "w");
+	fff = fopenUTF8(path, "w");
 
 	/* Check for failure */
 	if (!fff)
@@ -11619,7 +11677,7 @@ void auto_export(void)
 	    opt.export_folder ? opt.export_folder : RFTGDIR, filename, NULL);
 
 	/* Open file for writing */
-	fff = fopen(full_filename, "w");
+	fff = fopenUTF8(full_filename, "w");
 
 	/* Check for failure */
 	if (!fff)
@@ -11776,6 +11834,19 @@ static void gui_save_game(GtkMenuItem *menu_item, gpointer data)
 		/* Set current folder to last save */
 		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), opt.last_save);
 	}
+
+#ifdef _WIN32
+	/* If no last save location is set on Windows, set it to My Documents
+	*  This avoids saving to current directory - Program Files, which
+	*  is protected from writing on modern Windows
+	*/
+	if (!opt.last_save)
+	{
+		/* Set to My Documents */
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), 
+			g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS));
+	}
+#endif
 
 	/* Run dialog and check response */
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)

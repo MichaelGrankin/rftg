@@ -1254,3 +1254,4 @@ extern int export_game(game *g, char *filename, char *style_sheet,
                        int export_card_locations,
                        void (*export_log)(FILE *fff, int gid),
                        void (*export_callback)(FILE *fff, int gid), int gid);
+extern FILE* fopenUTF8(char *fname, char *mode);

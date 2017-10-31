@@ -22,6 +22,36 @@
  */
 
 #include "rftg.h"
+#ifdef WIN32
+#include <windows.h>
+#include <wchar.h>
+#endif
+
+/*
+*  WIN32: open a file with non-ANSI name
+*/
+
+FILE* fopenUTF8(char *fname, char *mode)
+{
+	FILE *fff;
+
+#ifdef _WIN32
+	wchar_t lfname[1024], lmode[8];
+	size_t size_required;
+
+	/* Convert path and mode to wide strings using utf8 codepage*/
+	MultiByteToWideChar(CP_UTF8, 0, mode, -1, lmode, 8);
+	MultiByteToWideChar(CP_UTF8, 0, fname, -1, lfname, 1024);
+
+	/* Open file and return handle */
+	fff = _wfopen(lfname, lmode);
+#else
+	fff = fopen(fname, mode);
+#endif
+
+	return fff;
+}
+
 
 /*
  * Read a game from a file.
@@ -142,7 +172,7 @@ int load_game(game *g, char *filename)
 	int ret_val = -1;
 
 	/* Open file for reading */
-	fff = fopen(filename, "r");
+	fff = fopenUTF8(filename, "r");
 
 	/* Check for failure */
 	if (!fff) return -1;
@@ -243,15 +273,14 @@ void write_game(game *g, FILE *fff, int player_us)
 		fprintf(fff, "%s\n", g->human_name);
 }
 
+
 /*
  * Save a game to the given filename.
  */
 int save_game(game *g, char *filename, int player_us)
 {
 	FILE *fff;
-
-	/* Open file for writing */
-	fff = fopen(filename, "w");
+	fff = fopenUTF8(filename, "w");
 
 	/* Check for failure */
 	if (!fff) return -1;
@@ -507,7 +536,7 @@ int export_game(game *g, char *filename, char *style_sheet,
 	int p, i, n, count, deck = 0, discard = 0, act[2];
 
 	/* Open file for writing */
-	fff = fopen(filename, "w");
+	fff = fopenUTF8(filename, "w");
 
 	/* Check for failure */
 	if (!fff) return -1;
