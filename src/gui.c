@@ -34,6 +34,10 @@
 #include "gtk-mac-menu.h"
 #endif
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 #define TITLE "Race for the Galaxy " RELEASE
 
 #define SERVER_1 "rftg.plingri.net"
@@ -185,6 +189,11 @@ static char *player_colors[MAX_PLAYER] =
 #define GOALM_HEIGHT 447
 
  /*
+ * Goal counter height (in % of small goal tile height)
+ */
+#define GOALP_HEIGHT (0.25 * GOALF_HEIGHT)
+
+ /*
  * Military icon size
  */
 #define MIL_WIDTH 420
@@ -197,6 +206,19 @@ static char *player_colors[MAX_PLAYER] =
 #define HIGH_YELLOW 1
 #define HIGH_RED    2
 
+ /*
+ * Goals that are too simple to display status progress under them
+ */
+static int simple_goals[] = 
+{ 
+	GOAL_FIRST_DISCARD,
+	GOAL_FIRST_SIX_DEVEL,
+	GOAL_FIRST_4_GOODS,
+	GOAL_FIRST_8_ACTIVE,
+	GOAL_FIRST_NEG_MILITARY,
+	GOAL_FIRST_2_PRESTIGE,
+	GOAL_FIRST_4_MILITARY,
+};
 
 
 /*
@@ -445,6 +467,15 @@ struct extra_info
 	char *fontstr;
 	int border;
 	int top_left;
+	int dx;
+};
+
+struct goal_info
+{
+	int most_goal;
+	int progress[MAX_PLAYER];
+	int claimed;
+	int claimed_by[MAX_PLAYER];
 };
 
 /*
@@ -471,7 +502,7 @@ static int action_cidx, action_oidx;
 /*
  * Number of icon images.
  */
-#define MAX_ICON 28
+#define MAX_ICON 29
 
 /*
  * Special icon numbers.
@@ -494,6 +525,7 @@ static int action_cidx, action_oidx;
 #define ICON_VULN_R     25
 #define ICON_VULN_I     26
 #define ICON_VULN_RI    27
+#define ICON_PLAYER_CLR 28
 
 /*
  * Icon states.
@@ -570,6 +602,10 @@ GtkWidget *games_view, *password_entry;
 GtkWidget *create_button, *join_button, *leave_button, *kick_button;
 GtkWidget *addai_button, *start_button;
 GtkWidget *action_prompt, *action_button;
+
+#ifdef _WIN32
+HWND hw;
+#endif
 
 /*
  * Keyboard accelerator group for main window.
@@ -1737,6 +1773,11 @@ static struct extra_info game_extra_info[3];
 static struct extra_info card_extra_info[MAX_ACCEL];
 
 /*
+* Set of "extra info" structures for goal progress display.
+*/
+static struct goal_info goal_extra_info[MAX_GOAL];
+
+/*
  * The current number of used accelerator keys.
  */
 static int key_count;
@@ -1788,6 +1829,12 @@ static gboolean draw_extra_text(GtkWidget *image, GdkEventExpose *event,
 		y = (image->allocation.height - th) / 2 + image->allocation.y;
 	}
 
+	/* Move text if displacement is set */
+	if (ei->dx)
+	{
+		x = x + ei->dx;
+	}
+
 	/* Draw border around text if asked */
 	if (ei->border)
 	{
@@ -1802,6 +1849,81 @@ static gboolean draw_extra_text(GtkWidget *image, GdkEventExpose *event,
 
 	/* Free font description */
 	pango_font_description_free(font);
+
+	/* Continue handling event */
+	return FALSE;
+}
+
+/*
+* Draw extra text on top of a GtkImage's window.
+*/
+static gboolean draw_goal_progress(GtkWidget *image, GdkEventExpose *event,
+	gpointer data)
+{
+	GdkWindow *w;
+	PangoLayout *layout;
+	PangoFontDescription *font;
+	int tw, th;
+	int x = 0, y = 0;
+	int width, height;
+	double goal_progress_height, goal_progress_width;
+	struct goal_info *gi = (struct goal_info *)data;
+
+	/* Get window to draw on */
+	w = gtk_widget_get_window(image);
+	width = image->allocation.width;
+	height = image->allocation.height;
+	x = image->allocation.x;
+	y = image->allocation.y;
+
+	goal_progress_height = round(GOALP_HEIGHT * width / GOALF_WIDTH);
+	goal_progress_width = (double)width / real_game.num_players;
+
+	/* Create pango layout */
+	layout = gtk_widget_create_pango_layout(image, NULL);
+
+	for (int i = 0; i < real_game.num_players; i++)
+	{
+		char score[32], str_score[32];
+
+		if (gi->progress[i] > 9)
+			sprintf(score, "+");
+		else if (gi->progress[i] < 0)
+			sprintf(score, "-");
+		else
+			sprintf(score, "%d", gi->progress[i]);
+
+		if (gi->claimed_by[i])
+			sprintf(str_score, "<b>%s</b>", score);
+		else
+			strcpy(str_score, score);
+
+		/* Set marked-up text */
+		pango_layout_set_markup(layout, str_score, -1);
+
+		/* Set alignment to center */
+		pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
+
+		font = pango_font_description_from_string("Sans 12");
+
+		/* Set layout's font */
+		pango_layout_set_font_description(layout, font);
+
+		/* Get size of text */
+		pango_layout_get_pixel_size(layout, &tw, &th);
+
+		double x_spacing = (goal_progress_width - tw) / 2;
+		double y_spacing = (goal_progress_height - th) / 2;
+
+		double xpos = x + round(i * goal_progress_width) + x_spacing;
+		double ypos = y + height - th - y_spacing;
+
+		/* Draw layout on top of image */
+		gdk_draw_layout(w, image->style->black_gc, xpos, ypos, layout);
+
+		/* Free font description */
+		pango_font_description_free(font);
+	}
 
 	/* Continue handling event */
 	return FALSE;
@@ -2724,7 +2846,24 @@ void redraw_table(void)
 }
 
 /*
+* Helper function, normalizes player index so player 0 is always Blue
+* (it is used for rotations to not affect the goal progress sequence)
+*/
+int norm_index(int player_pos)
+{
+	int new_pos = player_pos + player_us;
+	if (new_pos >= real_game.num_players)
+		new_pos = new_pos - real_game.num_players;
+
+	return new_pos;
+}
+
+
+
+/*
  * Create a tooltip for a goal image.
+ * Also used to fill the goal_extra_info structure, which contains 
+ * current goals status and players progress.
  */
 static char *goal_tooltip(game *g, int goal)
 {
@@ -2732,6 +2871,7 @@ static char *goal_tooltip(game *g, int goal)
 	player *p_ptr;
 	int i;
 	char text[1024];
+	struct goal_info *gi = goal_extra_info;
 
 	/* Create tooltip text */
 	sprintf(msg, "%s\n(%s)", goal_name[goal], goal_description[goal]);
@@ -2739,17 +2879,21 @@ static char *goal_tooltip(game *g, int goal)
 	/* Check for first goal */
 	if (goal <= GOAL_FIRST_4_MILITARY)
 	{
+		gi[goal].most_goal = 0;
+		
 		/* Check for claimed goal */
 		if (!g->goal_avail[goal])
 		{
 			/* Add text to tooltip */
 			strcat(msg, "\n\nClaimed by:");
 
+			gi[goal].claimed = 1;
+
 			/* Loop over players */
 			for (i = 0; i < g->num_players; i++)
 			{
 				/* Get player pointer */
-				p_ptr = &g->p[i];
+				p_ptr = &g->p[norm_index(i)];
 
 				/* Check for claim */
 				if (p_ptr->goal_claimed[goal])
@@ -2757,6 +2901,8 @@ static char *goal_tooltip(game *g, int goal)
 					/* Add name to tooltip */
 					strcat(msg, "\n  ");
 					strcat(msg, p_ptr->name);
+
+					//gi[goal].claimed_by[i] = 1;
 				}
 			}
 		}
@@ -2773,7 +2919,7 @@ static char *goal_tooltip(game *g, int goal)
 			for (i = 0; i < g->num_players; i++)
 			{
 				/* Get player pointer */
-				p_ptr = &g->p[i];
+				p_ptr = &g->p[norm_index(i)];
 
 				/* Create progress string */
 				sprintf(text, "\n %s: %d",
@@ -2781,6 +2927,8 @@ static char *goal_tooltip(game *g, int goal)
 
 				/* Add progress string to tooltip */
 				strcat(msg, text);
+
+				gi[goal].progress[i] = p_ptr->goal_progress[goal];
 			}
 		}
 	}
@@ -2788,14 +2936,19 @@ static char *goal_tooltip(game *g, int goal)
 	/* Check for most goal */
 	if (goal >= GOAL_MOST_MILITARY)
 	{
+		gi[goal].most_goal = 1;
+
 		/* Add text to tooltip */
 		strcat(msg, "\n\nProgress:");
 
 		/* Loop over players */
 		for (i = 0; i < g->num_players; i++)
 		{
+			/* Goal not claimed by default */
+			gi[goal].claimed_by[i] = 0;
+
 			/* Get player pointer */
-			p_ptr = &g->p[i];
+			p_ptr = &g->p[norm_index(i)];
 
 			/* Create progress string */
 			sprintf(text, "\n%c %s: %d",
@@ -2804,6 +2957,13 @@ static char *goal_tooltip(game *g, int goal)
 
 			/* Add progress string to tooltip */
 			strcat(msg, text);
+
+			if (p_ptr->goal_claimed[goal])
+			{
+				gi[goal].claimed = 1;
+				gi[goal].claimed_by[i] = 1;
+			}
+			gi[goal].progress[i] = p_ptr->goal_progress[goal];
 		}
 	}
 
@@ -2812,14 +2972,29 @@ static char *goal_tooltip(game *g, int goal)
 }
 
 /*
+* Check if the goal is simple, so that no progress status is required
+*/
+int goal_is_simple(int goal)
+{
+	int len = sizeof(simple_goals) / sizeof(simple_goals[0]);
+
+	for (int i = 0; i < len; i++)
+	{
+		if (goal == simple_goals[i])
+			return 1;
+	}
+	return 0;
+}
+
+/*
  * Redraw the goal area.
  */
 void redraw_goal(void)
 {
 	GtkWidget *image;
-	GdkPixbuf *buf;
-	int i;
-	int width, height, goal_h, y = 0;
+	GdkPixbuf *buf, *progress_buf, *final_buf;
+	int i, num_players, most_goal, add_goal_progress;
+	int width, height, goal_h, goal_progress_h, y = 0;
 
 	/* First destroy all pre-existing goal widgets */
 	gtk_container_foreach(GTK_CONTAINER(goal_area), destroy_widget, NULL);
@@ -2839,12 +3014,17 @@ void redraw_goal(void)
 		{
 			/* Compute height of "first" goal */
 			goal_h = width * GOALF_HEIGHT / GOALF_WIDTH;
+			most_goal = 0;
 		}
 		else
 		{
 			/* Compute height of "most" goal */
 			goal_h = width * GOALM_HEIGHT / GOALM_WIDTH;
+			most_goal = 1;
 		}
+
+		/* Should goal progress be added after this goal? */
+		add_goal_progress = 1;
 
 		/* Create goal image */
 		buf = gdk_pixbuf_scale_simple(goal_cache[i], width, goal_h,
@@ -2855,10 +3035,54 @@ void redraw_goal(void)
 		{
 			/* Desaturate */
 			gdk_pixbuf_saturate_and_pixelate(buf, buf, 0, TRUE);
+
+			/* Most goals' progress should be tracked even after they are claimed,
+			   since they can change hands during game */
+			if (most_goal)
+				add_goal_progress = 1;
+			else
+				add_goal_progress = 0;
 		}
 
-		/* Make image widget */
-		image = gtk_image_new_from_pixbuf(buf);
+		/* Check if goal progress display is enabled and it is not a trivial goal */
+		if (!opt.goal_progress || goal_is_simple(i))
+			add_goal_progress = 0;
+
+		if (add_goal_progress)
+		{
+			/* Scale goal progress height (by default 25% of the first goal height) */
+			goal_progress_h = round(width * GOALP_HEIGHT / GOALF_WIDTH);
+
+			num_players = real_game.num_players;
+			double visible_portion = num_players / 6.0;
+
+			/* Scale 6 pixel image to create the background for goal progress */
+			progress_buf = gdk_pixbuf_scale_simple(icon_cache[ICON_PLAYER_CLR], width / visible_portion,
+				goal_progress_h, GDK_INTERP_NEAREST);
+
+			/* Combine goal image in 'buf' and goal progress image in 'progress_buf' */
+			/* to the 'final_buf' */
+			final_buf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, width, goal_h + goal_progress_h);
+			gdk_pixbuf_fill(final_buf, 0);
+			gdk_pixbuf_copy_area(buf, 0, 0, width, goal_h, final_buf, 0, 0);
+			gdk_pixbuf_copy_area(progress_buf, 0, 0, width, goal_progress_h, final_buf, 0, goal_h);
+
+			/* Make image widget */
+			image = gtk_image_new_from_pixbuf(final_buf);
+
+			/* Destroy local copy of the pixbuf */
+			g_object_unref(G_OBJECT(final_buf));
+			g_object_unref(G_OBJECT(progress_buf));
+
+			/* Connect expose-event to draw extra text */
+			g_signal_connect_after(G_OBJECT(image), "expose-event",
+				G_CALLBACK(draw_goal_progress), &goal_extra_info[i]);
+		}
+		else
+		{
+			/* Make just image widget */
+			image = gtk_image_new_from_pixbuf(buf);
+		}
 
 		/* Destroy local copy of the pixbuf */
 		g_object_unref(G_OBJECT(buf));
@@ -4721,7 +4945,7 @@ static void redraw_status_area(int who, GtkWidget *box)
 				icon = ICON_VULN_I;
 		}
 
-		width = round(height * MIL_WIDTH / MIL_HEIGHT);
+		width = round( (double)height * MIL_WIDTH / MIL_HEIGHT);
 
 		/* Create military icon image */
 		buf = gdk_pixbuf_scale_simple(icon_cache[icon], width, height,
@@ -4742,6 +4966,9 @@ static void redraw_status_area(int who, GtkWidget *box)
 
 		/* No border */
 		ei->border = 0;
+
+		/* Displacement */
+		ei->dx = -1;
 
 		/* Connect expose-event to draw extra text */
 		g_signal_connect_after(G_OBJECT(image), "expose-event",
@@ -9908,7 +10135,7 @@ static char* get_user_config_dir(void)
 		g_mkdir(config_dir, NULL);
 #else
 	/* Build full file name */
-	config_dir = get_user_config_dir();
+	config_dir = g_get_user_config_dir();
 #endif
 
 	return config_dir;
@@ -11086,6 +11313,8 @@ static void read_prefs(void)
 	                                          "cost_in_hand", NULL);
 	opt.key_cues = g_key_file_get_boolean(pref_file, "gui",
 	                                      "key_cues", NULL);
+	opt.goal_progress = g_key_file_get_boolean(pref_file, "gui",
+		"goal_progress", NULL);
 	opt.auto_select = g_key_file_get_boolean(pref_file, "gui",
 	                                         "auto_select", NULL);
 	opt.auto_save = g_key_file_get_boolean(pref_file, "gui",
@@ -11311,7 +11540,9 @@ void save_prefs(void)
 	g_key_file_set_boolean(pref_file, "gui", "cost_in_hand",
 	                       opt.cost_in_hand);
 	g_key_file_set_boolean(pref_file, "gui", "key_cues",
-	                       opt.key_cues);
+		opt.key_cues);
+	g_key_file_set_boolean(pref_file, "gui", "goal_progress",
+		opt.goal_progress);
 	g_key_file_set_boolean(pref_file, "gui", "auto_select",
 	                       opt.auto_select);
 	g_key_file_set_boolean(pref_file, "gui", "auto_save",
@@ -11741,6 +11972,19 @@ static void gui_load_game(GtkMenuItem *menu_item, gpointer data)
 		/* Set current folder to last save */
 		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), opt.last_save);
 	}
+
+#ifdef _WIN32
+	/* If no last save location is set on Windows, set it to My Documents
+	*  since it's unlikely that there will be saves in protected
+	*  Program Files folder
+	*/
+	if (!opt.last_save)
+	{
+		/* Set to My Documents */
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+			g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS));
+	}
+#endif
 
 	/* Run dialog and check response */
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
@@ -12857,7 +13101,7 @@ static void gui_options(GtkMenuItem *menu_item, gpointer data)
 	GtkWidget *log_width_label, *log_width_scale;
 	GtkWidget *game_view_box, *game_view_frame;
 	GtkWidget *shrink_button, *discount_button, *hand_vp_button;
-	GtkWidget *hand_cost_button, *key_cues_button;
+	GtkWidget *hand_cost_button, *key_cues_button, *goal_progress_button;
 	GtkWidget *interface_box, *interface_frame;
 	GtkWidget *auto_select_button;
 	GtkWidget *log_box, *log_frame;
@@ -13058,6 +13302,21 @@ static void gui_options(GtkMenuItem *menu_item, gpointer data)
 
 	/* Pack button into status box */
 	gtk_box_pack_start(GTK_BOX(game_view_box), key_cues_button, FALSE, TRUE, 0);
+
+	/* Create toggle button for  goal progress */
+	goal_progress_button = gtk_check_button_new_with_label(
+		"Display goal progress");
+
+	/* Set toggled status */
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(goal_progress_button),
+		opt.goal_progress);
+
+	/* Connect toggle button "toggled" signal */
+	g_signal_connect(G_OBJECT(goal_progress_button), "toggled",
+		G_CALLBACK(update_option), &opt.goal_progress);
+
+	/* Pack button into status box */
+	gtk_box_pack_start(GTK_BOX(game_view_box), goal_progress_button, FALSE, TRUE, 0);
 
 	/* Create frame around buttons */
 	game_view_frame = gtk_frame_new("Game view");
@@ -14298,6 +14557,31 @@ void switch_view(int lobby, int chat)
 	}
 }
 
+void flash_icon(int sound)
+{
+#ifdef _WIN32
+	FLASHWINFO fi;
+
+	/* If window is already active do nothing */
+	if (GetActiveWindow() == hw)
+		return 0;
+
+	fi.hwnd = hw;
+	fi.cbSize = sizeof(FLASHWINFO);
+	fi.dwFlags = FLASHW_ALL | FLASHW_TIMERNOFG;
+	fi.uCount = 0;
+	fi.dwTimeout = 0;
+	
+	/* Flashes the taskbar icon */
+	FlashWindowEx(&fi);
+
+	if (sound)
+	{
+		PlaySound(TEXT("notification.wav"), NULL, SND_FILENAME);
+	}
+#endif
+}
+
 /*
  * Setup windows, callbacks, etc, then let GTK take over.
  */
@@ -14389,6 +14673,14 @@ int main(int argc, char *argv[])
 		/* Error */
 		exit(1);
 	}
+
+	/* TODO don't forget to add gui options for sounds */
+	opt.sound_join = 1;
+	opt.sound_start = 1;
+	opt.sound_mention = 1;
+	opt.sound_open_game = 1;
+
+	opt.goal_progress = 1;
 
 	/* Read preference file */
 	read_prefs();
@@ -14921,6 +15213,10 @@ int main(int argc, char *argv[])
 	/* Create "chat" tag for message buffer */
 	gtk_text_buffer_create_tag(message_buffer, FORMAT_CHAT,
 	                           "weight", "bold", NULL);
+
+	/* Create "mention" tag for metions in chat */
+	/*gtk_text_buffer_create_tag(message_buffer, FORMAT_MENTION,
+		"background", "#dd00dd", NULL);*/
 
 	/* Create "phase" tag for message buffer */
 	gtk_text_buffer_create_tag(message_buffer, FORMAT_PHASE,
@@ -15484,6 +15780,9 @@ int main(int argc, char *argv[])
 	/* Create "chat" tag for usernames */
 	gtk_text_buffer_create_tag(chat_buffer, FORMAT_CHAT, "weight", "bold", NULL);
 
+	/* Create "mention" tag for metions in chat */
+	//gtk_text_buffer_create_tag(chat_buffer, FORMAT_MENTION,	"background", "#dd00dd", NULL);
+
 	/* Get end of buffer */
 	gtk_text_buffer_get_end_iter(chat_buffer, &end_iter);
 
@@ -15562,6 +15861,12 @@ int main(int argc, char *argv[])
 
 	/* Switch to main game view */
 	switch_view(0, 0);
+
+#ifdef _WIN32
+	/* Get window HWND */
+	GdkWindow *wgdk = gtk_widget_get_window(window);
+	hw = (HWND)gdk_win32_drawable_get_handle(wgdk);
+#endif
 
 #ifdef __APPLE__
 	/* Setup OS X style menus */

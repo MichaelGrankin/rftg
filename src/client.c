@@ -590,7 +590,7 @@ format_error:
  */
 static void handle_game_player(char *ptr, int size)
 {
-	int x, y;
+	int x, y, sid = -1, player_joined = 0;
 	char buf[1024];
 	char *msg_buf = ptr;
 	char *cmp_key;
@@ -601,6 +601,7 @@ static void handle_game_player(char *ptr, int size)
 
 	/* Read session ID */
 	if (!get_integer(&x, msg_buf, size, &ptr)) goto format_error;
+	sid = x;
 
 	/* Read player spot */
 	if (!get_integer(&y, msg_buf, size, &ptr)) goto format_error;
@@ -619,6 +620,8 @@ static void handle_game_player(char *ptr, int size)
 
 		/* Add a child row */
 		gtk_tree_store_append(game_list, &child_iter, &list_iter);
+
+		player_joined = 1;
 	}
 
 	/* Check for deleting player */
@@ -676,6 +679,12 @@ static void handle_game_player(char *ptr, int size)
 	gtk_tree_store_set(game_list, &child_iter,
 	                   GAME_COL_SELF, x,
 	                   -1);
+
+	/* Check that joined player is not yourself and that it connects to your game */
+	if (player_joined && x != 1 && sid == client_sid)
+	{
+		flash_icon(SOUND_INACTIVE);
+	}
 
 	/* Set weight */
 	gtk_tree_store_set(game_list, &child_iter,
@@ -1620,6 +1629,7 @@ static gboolean message_read(gpointer data)
 
 			/* Destroy compare key */
 			g_free(cmp_key);
+
 			break;
 
 		/* A player has left */
@@ -1722,6 +1732,9 @@ static gboolean message_read(gpointer data)
 
 			/* Notify gui */
 			update_menu_items();
+
+			/* Flash taskbar and play sound if minimized */
+			flash_icon(SOUND_INACTIVE);
 			break;
 
 		/* We have been removed from a game */
@@ -1835,6 +1848,27 @@ static gboolean message_read(gpointer data)
 			/* Add newline to message */
 			strcat(text, "\n");
 
+			/* See if the message @mentions us */
+			char atusername[64];
+			char *ptr = text;
+
+			/* Construct "@username" string to search for */
+			strcpy(atusername, "@");
+			strcat(atusername, opt.username);
+
+			/* Check for all "@username" occurences */
+			while (ptr = strstr(ptr, atusername))
+			{
+				/* Now check that symbol after "@username" is illegal for usernames
+				  (non A-Z0-9_) so program doesn't notify "@user" if "@user12" was mentioned */
+				ptr = ptr + strlen(atusername);
+				if (!isalnum(*ptr) && *ptr != '_')
+				{
+					flash_icon(SOUND_ALWAYS);
+					break;
+				}
+			}
+
 			/* Get chat buffer */
 			chat_buffer = gtk_text_view_get_buffer(
 			                              GTK_TEXT_VIEW(chat_view));
@@ -1852,7 +1886,8 @@ static gboolean message_read(gpointer data)
 			gtk_text_buffer_get_end_iter(chat_buffer, &end_iter);
 
 			/* Add message to chat window */
-			gtk_text_buffer_insert(chat_buffer, &end_iter, text,-1);
+			gtk_text_buffer_insert(chat_buffer, &end_iter, text, -1);
+			//gtk_text_buffer_insert_with_tags_by_name(chat_buffer, &end_iter, text,-1, FORMAT_MENTION, NULL);
 
 			/* Get end mark */
 			end_mark = gtk_text_buffer_get_mark(chat_buffer, "end");

@@ -136,6 +136,9 @@ typedef struct options
 	/* Auto select forced choices */
 	int auto_select;
 
+	/* Display goal progress under goal tiles */
+	int goal_progress;
+
 	/* Server name to connect to */
 	char *server_name;
 
@@ -199,6 +202,12 @@ typedef struct options
 
 	/* Export folder location */
 	char *export_folder;
+
+	/* Sound options (windows only for now) */
+	int sound_join; //Someone joins your game
+	int sound_start; //The game you participate in starts
+	int sound_mention; //Someone mentions your @nick in chat
+	int sound_open_game; //A game without password opens on server
 
 } options;
 

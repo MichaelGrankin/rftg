@@ -594,6 +594,7 @@
  */
 #define FORMAT_EM "em"
 #define FORMAT_CHAT "chat"
+#define FORMAT_MENTION "mention"
 #define FORMAT_PHASE "phase"
 #define FORMAT_TAKEOVER "takeover"
 #define FORMAT_GOAL "goal"
@@ -602,6 +603,13 @@
 #define FORMAT_DRAW "draw"
 #define FORMAT_DISCARD "discard"
 #define FORMAT_DEBUG "debug"
+
+/*
+ * Notification sound options
+ */
+#define SOUND_NEVER 0
+#define SOUND_INACTIVE 1
+#define SOUND_ALWAYS 2
 
 /*
  * Forward declaration.
@@ -1255,3 +1263,4 @@ extern int export_game(game *g, char *filename, char *style_sheet,
                        void (*export_log)(FILE *fff, int gid),
                        void (*export_callback)(FILE *fff, int gid), int gid);
 extern FILE* fopenUTF8(char *fname, char *mode);
+extern void flash_icon(int sound);

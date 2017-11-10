@@ -99,7 +99,19 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_19DAF686912B4706A8D1FB443C5B14D7"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_205E403C98E94C66B8609E2D20C37594"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_21F8B3EEF66C417A9C9F68B168BB5DF1"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -142,12 +154,6 @@
         "Entry"
         {
         "MsmKey" = "8:_3189653846104D9CBD011FA9EC33FE98"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_3964C45862F3481A8C050A9B043B1BA1"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -196,6 +202,12 @@
         "Entry"
         {
         "MsmKey" = "8:_493F65AA7F194F33A70619FE7FADE40C"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_4D59DA46D19F4D1596B29F7BBB318D1D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -340,6 +352,12 @@
         "Entry"
         {
         "MsmKey" = "8:_86E83ED03909435C9F527717D0D46A13"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_87E616B92EC044B7B9B1E197CD1FD741"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -603,6 +621,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_E451E94DAAEC4743970B78EC411BD907"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_E62DA7D558DF474DB73DA64ED4F5C8BB"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -616,6 +640,12 @@
         "Entry"
         {
         "MsmKey" = "8:_EC1C26D6BEBC402C8CF3149BD8620C92"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_EC7699EF470E425AACE25BAF32E1A1FC"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -1003,12 +1033,52 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_19DAF686912B4706A8D1FB443C5B14D7"
+            {
+            "SourcePath" = "8:..\\..\\..\\src\\notification.wav"
+            "TargetName" = "8:notification.wav"
+            "Tag" = "8:"
+            "Folder" = "8:_82923BBA69F846959019CA7643659879"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_205E403C98E94C66B8609E2D20C37594"
             {
             "SourcePath" = "8:..\\..\\..\\src\\network\\rftg.eval.5.4.net.gz"
             "TargetName" = "8:rftg.eval.5.4.net.gz"
             "Tag" = "8:"
             "Folder" = "8:_CBFD83FFB90E462C968BDE682C261FBB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_21F8B3EEF66C417A9C9F68B168BB5DF1"
+            {
+            "SourcePath" = "8:..\\..\\..\\src\\icon26.png"
+            "TargetName" = "8:icon26.png"
+            "Tag" = "8:"
+            "Folder" = "8:_82923BBA69F846959019CA7643659879"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1149,26 +1219,6 @@
             "TargetName" = "8:rftg.eval.3.2.net.gz"
             "Tag" = "8:"
             "Folder" = "8:_CBFD83FFB90E462C968BDE682C261FBB"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3964C45862F3481A8C050A9B043B1BA1"
-            {
-            "SourcePath" = "8:..\\rftg"
-            "TargetName" = "8:rftg"
-            "Tag" = "8:"
-            "Folder" = "8:_04FE4732800245B5A749B63088025816"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1329,6 +1379,26 @@
             "TargetName" = "8:rftg.role.6.3.net.gz"
             "Tag" = "8:"
             "Folder" = "8:_CBFD83FFB90E462C968BDE682C261FBB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4D59DA46D19F4D1596B29F7BBB318D1D"
+            {
+            "SourcePath" = "8:..\\..\\..\\src\\icon13.png"
+            "TargetName" = "8:icon13.png"
+            "Tag" = "8:"
+            "Folder" = "8:_82923BBA69F846959019CA7643659879"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1807,6 +1877,26 @@
             {
             "SourcePath" = "8:..\\..\\..\\3rdparty\\win\\libcairo-2.dll"
             "TargetName" = "8:libcairo-2.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_82923BBA69F846959019CA7643659879"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_87E616B92EC044B7B9B1E197CD1FD741"
+            {
+            "SourcePath" = "8:..\\..\\..\\src\\icon25.png"
+            "TargetName" = "8:icon25.png"
             "Tag" = "8:"
             "Folder" = "8:_82923BBA69F846959019CA7643659879"
             "Condition" = "8:"
@@ -2683,6 +2773,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E451E94DAAEC4743970B78EC411BD907"
+            {
+            "SourcePath" = "8:..\\..\\..\\src\\icon28.png"
+            "TargetName" = "8:icon28.png"
+            "Tag" = "8:"
+            "Folder" = "8:_82923BBA69F846959019CA7643659879"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E62DA7D558DF474DB73DA64ED4F5C8BB"
             {
             "SourcePath" = "8:..\\..\\..\\src\\network\\rftg.role.2.5.net.gz"
@@ -2729,6 +2839,26 @@
             "TargetName" = "8:rftg.role.1.4.net.gz"
             "Tag" = "8:"
             "Folder" = "8:_CBFD83FFB90E462C968BDE682C261FBB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_EC7699EF470E425AACE25BAF32E1A1FC"
+            {
+            "SourcePath" = "8:..\\..\\..\\src\\icon27.png"
+            "TargetName" = "8:icon27.png"
+            "Tag" = "8:"
+            "Folder" = "8:_82923BBA69F846959019CA7643659879"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -2898,6 +3028,17 @@
             "Property" = "8:AppDataFolder"
                 "Folders"
                 {
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_4E266194C94C4E24AAFD42DB0D21AF85"
+                    {
+                    "Name" = "8:Race for the Galaxy"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_00425C99BA7D4A5AB590DD140C77E9A3"
+                        "Folders"
+                        {
+                        }
+                    }
                 }
             }
             "{1525181F-901A-416C-8A58-119130FE478E}:_2795AB341B20460BB8F26D292736DD8C"
