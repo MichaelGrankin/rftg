@@ -60,6 +60,7 @@ expansion exp_info[] =
 	{
 		"Xeno Invasion", "XI", 4,
 		.max_players = 5,
+		.has_invasion = 1,
 		.has_start_world_choice = 1,
 	},
 	{
@@ -191,6 +192,14 @@ int goals_enabled(game *g)
 int takeovers_enabled(game *g)
 {
 	return exp_info[g->expanded].has_takeovers && !g->takeover_disabled;
+}
+
+/*
+* Return whether invasion is enabled in this game.
+*/
+int invasion_enabled(game *g)
+{
+	return exp_info[g->expanded].has_invasion && !g->invasion_disabled;
 }
 
 /*
@@ -13132,6 +13141,22 @@ static void game_information(game *g)
 		{
 			/* Send message */
 			message_add_formatted(g, "Takeovers enabled.\n", FORMAT_TAKEOVER);
+		}
+	}
+
+	/* Check for invasion with XI */
+	if (exp_info[g->expanded].has_invasion)
+	{
+		/* Check for disabled takeovers */
+		if (g->invasion_disabled)
+		{
+			/* Send message */
+			message_add(g, "Invasion game off.\n");
+		}
+		else
+		{
+			/* Send message */
+			message_add_formatted(g, "Invasion game on.\n", FORMAT_TAKEOVER);
 		}
 	}
 }

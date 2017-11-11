@@ -103,6 +103,9 @@ typedef struct options
 	/* Disable takeovers */
 	int disable_takeover;
 
+	/* Disable invasion */
+	int disable_invasion;
+
 	/* Customize seed */
 	int customize_seed;
 

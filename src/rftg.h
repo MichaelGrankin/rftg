@@ -781,6 +781,9 @@ typedef struct expansion
 	/* Whether the expansion has prestige */
 	int has_prestige;
 
+	/* Whether the expansion can be played with the Invasion game */
+	int has_invasion;
+
 	/* Whether the expansion has initial choice between blue or red world */
 	int has_start_world_choice;
 } expansion;
@@ -996,6 +999,9 @@ typedef struct game
 	/* Disable takeovers in second (or later) expansion */
 	int8_t takeover_disabled;
 
+	/* Disable invasion game in Xeno Invasion */
+	int8_t invasion_disabled;
+
 	/* Include promo start worlds in deck */
 	int8_t promo;
 
@@ -1073,6 +1079,7 @@ typedef struct campaign
 	int advanced;
 	int goal_disabled;
 	int takeover_disabled;
+	int invasion_disabled;
 
 	/* Campaign name */
 	char *name;

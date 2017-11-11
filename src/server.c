@@ -207,6 +207,7 @@ typedef struct session
 	int advanced;
 	int disable_goal;
 	int disable_takeover;
+	int disable_invasion;
 
 	/* Game speed */
 	int speed;
@@ -3765,6 +3766,8 @@ static void handle_create(int cid, int size)
 		s_ptr->disable_goal = 0;
 	if (!exp_info[s_ptr->expanded].has_takeovers)
 		s_ptr->disable_takeover = 0;
+	if (!exp_info[s_ptr->expanded].has_invasion)
+		s_ptr->disable_invasion = 0;
 
 	/* Insert game into database */
 	s_ptr->gid = db_new_game(sid);
