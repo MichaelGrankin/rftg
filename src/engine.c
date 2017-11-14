@@ -830,6 +830,11 @@ static void gain_vps(game *g, int who, int num, char *reason)
 	}
 }
 
+static void gain_defense_award(game *g, int who, int num, char *reason)
+{
+	//TODO
+}
+
 /*
  * Spend some of a player's prestige.
  */
@@ -1035,6 +1040,9 @@ void clear_temp(game *g)
 
 		/* Clear bonus military */
 		p_ptr->bonus_military_xeno = 0;
+
+		/* Clear bonus defense */
+		p_ptr->bonus_defense_xeno = 0;
 
 		/* Clear bonus settle cost reduction */
 		p_ptr->bonus_reduce = 0;
@@ -14456,6 +14464,9 @@ static void score_game_player(game *g, int who)
 
 	/* Start with VP chips */
 	p_ptr->end_vp = p_ptr->vp;
+
+	if (invasion_enabled(g))
+		p_ptr->end_vp += p_ptr->defense_vp;
 
 	/* Start at first active card */
 	x = p_ptr->head[WHERE_ACTIVE];

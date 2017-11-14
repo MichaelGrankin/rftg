@@ -611,6 +611,8 @@
 #define SOUND_INACTIVE 1
 #define SOUND_ALWAYS 2
 
+static int XENO_STARTING_STR[] = { 0, 0, 22, 28, 33, 39 };
+
 /*
  * Forward declaration.
  */
@@ -869,6 +871,12 @@ typedef struct player
 	/* Bonus military against Xeno accrued so far this phase */
 	int8_t bonus_military_xeno;
 
+	/* Bonus defense against Xeno accrued so far this phase */
+	int8_t bonus_defense_xeno;
+
+	/* +2 def bunker against Xeno used */
+	int8_t xeno_bunker_used;
+
 	/* Bonus settle discount accrued so far this phase */
 	int8_t bonus_reduce;
 
@@ -898,6 +906,13 @@ typedef struct player
 
 	/* Victory points from goals */
 	int16_t goal_vp;
+
+	/* Victory points from defense awards in XI */
+	int16_t defense_vp;
+
+	/* Victory points from war contributions in XI */
+	/* Just for Greatest Contributor determination, don't sum with 'vp' var */
+	int16_t contributions_vp;
 
 	/* Total victory points (if game ended now) */
 	int16_t end_vp;
@@ -1037,6 +1052,18 @@ typedef struct game
 
 	/* Takeover marked for failure */
 	int8_t takeover_defeated[MAX_TAKEOVER];
+
+	/* Current strength of the Xeno invaders */
+	int8_t xeno_strength;
+
+	/* Empire defeat tile */
+	int8_t defeat_tile;
+
+	/* Combine mil+xeno strength of all players */
+	int8_t combined_str;
+
+	/* Positions of admiral disks on repulse track */
+	player* repulse_track[MAX_PLAYER];
 
 	/* XXX Current kind of "any" good world */
 	int8_t oort_kind;

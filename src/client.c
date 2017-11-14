@@ -1850,22 +1850,26 @@ static gboolean message_read(gpointer data)
 
 			/* See if the message @mentions us */
 			char atusername[64];
-			char *ptr = text;
+			char *sptr = text;
 
-			/* Construct "@username" string to search for */
-			strcpy(atusername, "@");
-			strcat(atusername, opt.username);
-
-			/* Check for all "@username" occurences */
-			while (ptr = strstr(ptr, atusername))
+			/* Check for @mentions if not currently playing a game */
+			if (!playing_game)
 			{
-				/* Now check that symbol after "@username" is illegal for usernames
-				  (non A-Z0-9_) so program doesn't notify "@user" if "@user12" was mentioned */
-				ptr = ptr + strlen(atusername);
-				if (!isalnum(*ptr) && *ptr != '_')
+				/* Construct "@username" string to search for */
+				strcpy(atusername, "@");
+				strcat(atusername, opt.username);
+
+				/* Check for all "@username" occurences */
+				while (sptr = strstr(sptr, atusername))
 				{
-					flash_icon(SOUND_ALWAYS);
-					break;
+					/* Now check that symbol after "@username" is illegal for usernames
+					  (non A-Z0-9_) so program doesn't notify "@user" if "@user12" was mentioned */
+					sptr = sptr + strlen(atusername);
+					if (!isalnum(*sptr) && *sptr != '_')
+					{
+						flash_icon(SOUND_ALWAYS);
+						break;
+					}
 				}
 			}
 

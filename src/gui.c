@@ -348,17 +348,26 @@ typedef struct mil_strength
 	/* Current temporary military against xeno*/
 	int bonus_xeno;
 
+	/* Current temporary defense against xeno attacks */
+	int bonus_xeno_defense;
+
 	/* Maximum additional temporary military */
 	int max_bonus;
 
 	/* Maximum additional temporary military against xeno */
 	int max_bonus_xeno;
 
+	/* Maximum additional temporary defence against xeno attacks */
+	int max_bonus_xeno_defense;
+
 	/* Additional military against rebel worlds */
 	int rebel;
 
 	/* Additional military against xeno worlds */
 	int xeno;
+
+	/* Additional defense against xeno attacks */
+	int xeno_defense;
 
 	/* Additional specific military */
 	int specific[MAX_GOOD];
@@ -1761,7 +1770,7 @@ static int action_check_start(void)
 /*
  * Set of "extra info" structures for player statuses.
  */
-static struct extra_info status_extra_info[MAX_PLAYER][6];
+static struct extra_info status_extra_info[MAX_PLAYER][7];
 
 /*
  * Set of "extra info" structures for game status.
@@ -4989,6 +4998,46 @@ static void redraw_status_area(int who, GtkWidget *box)
 		gtk_box_pack_start(GTK_BOX(box), image, FALSE, FALSE, 0);
 	}
 
+	/* Check for XI expansion and enabled Invasion game */
+	if (exp_info[real_game.expanded].has_invasion && !opt.disable_invasion)
+	{
+		int bmil  = s_ptr->military.base;
+		int xmil  = bmil + s_ptr->military.xeno;
+		int xdmil = xmil + s_ptr->military.xeno_defense;
+
+		/* Create victory point icon image */
+		buf = gdk_pixbuf_scale_simple(icon_cache[ICON_VP], height, height,
+			GDK_INTERP_BILINEAR);
+
+		/* Create image from pixbuf */
+		image = gtk_image_new_from_pixbuf(buf);
+
+		/* Pointer to extra info structure */
+		ei = &status_extra_info[who][6];
+
+		/* Create text for victory points */
+		sprintf(ei->text, "<b>%d\n%d</b>", xmil, xdmil);
+
+		/* Set font */
+		ei->fontstr = "Sans 10";
+
+		/* Draw text a border */
+		ei->border = 1;
+
+		/* Connect expose-event to draw extra text */
+		g_signal_connect_after(G_OBJECT(image), "expose-event",
+			G_CALLBACK(draw_extra_text), ei);
+
+		/* Destroy our copy of the icon */
+		g_object_unref(G_OBJECT(buf));
+
+		/* Add tooltip */
+		//gtk_widget_set_tooltip_markup(image, s_ptr->vp_tip);
+
+		/* Pack icon into status box */
+		gtk_box_pack_start(GTK_BOX(box), image, FALSE, FALSE, 0);
+	}
+
 	/* Loop over goals */
 	for (i = 0; i < MAX_GOAL; i++)
 	{
@@ -5720,6 +5769,10 @@ static void compute_military(game *g, int who, mil_strength *m_ptr)
 			/* Check for military from hand */
 			if (o_ptr->code & P3_MILITARY_HAND)
 				hand_military += o_ptr->value;
+
+			/* Check for defense against Xenos */
+			if (!(o_ptr->code ^ P3_XENO_DEFENSE))
+				m_ptr->xeno_defense += o_ptr->value;
 
 			/* Skip non-military powers */
 			if (!(o_ptr->code & P3_EXTRA_MILITARY)) continue;
@@ -6602,6 +6655,13 @@ static void gui_choose_action(game *g, int who, int action[2], int one)
 			/* Skip button */
 			continue;
 		}
+
+		///* Skip produce repair if not playing invasion game */
+		//if (!invasion_enabled(g) && i == ACT_PRODUCE_REPAIR)
+		//{
+		//	/* Skip button */
+		//	continue;
+		//}
 
 		/* Create button */
 		action_toggle[i] = gtk_button_new();
@@ -14644,9 +14704,10 @@ void flash_icon(int sound)
 #ifdef _WIN32
 	FLASHWINFO fi;
 
-	/* If window is already active do nothing */
+	/* If game window is active don't play sound unless SOUND_ALWAYS specified */
 	if (GetActiveWindow() == hw)
-		return 0;
+		if (sound != SOUND_ALWAYS)
+			return 0;
 
 	fi.hwnd = hw;
 	fi.cbSize = sizeof(FLASHWINFO);
