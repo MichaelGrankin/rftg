@@ -14562,9 +14562,10 @@ void flash_icon(int sound)
 #ifdef _WIN32
 	FLASHWINFO fi;
 
-	/* If window is already active do nothing */
+	/* If window is already active do nothing unless SOUND_ALWAYS specified */
 	if (GetActiveWindow() == hw)
-		return 0;
+		if (sound != SOUND_ALWAYS)
+			return 0;
 
 	fi.hwnd = hw;
 	fi.cbSize = sizeof(FLASHWINFO);
