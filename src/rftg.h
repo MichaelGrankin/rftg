@@ -611,8 +611,6 @@
 #define SOUND_INACTIVE 1
 #define SOUND_ALWAYS 2
 
-static int XENO_STARTING_STR[] = { 0, 0, 22, 28, 33, 39 };
-
 /*
  * Forward declaration.
  */
@@ -783,9 +781,6 @@ typedef struct expansion
 	/* Whether the expansion has prestige */
 	int has_prestige;
 
-	/* Whether the expansion can be played with the Invasion game */
-	int has_invasion;
-
 	/* Whether the expansion has initial choice between blue or red world */
 	int has_start_world_choice;
 } expansion;
@@ -871,12 +866,6 @@ typedef struct player
 	/* Bonus military against Xeno accrued so far this phase */
 	int8_t bonus_military_xeno;
 
-	/* Bonus defense against Xeno accrued so far this phase */
-	int8_t bonus_defense_xeno;
-
-	/* +2 def bunker against Xeno used */
-	int8_t xeno_bunker_used;
-
 	/* Bonus settle discount accrued so far this phase */
 	int8_t bonus_reduce;
 
@@ -906,13 +895,6 @@ typedef struct player
 
 	/* Victory points from goals */
 	int16_t goal_vp;
-
-	/* Victory points from defense awards in XI */
-	int16_t defense_vp;
-
-	/* Victory points from war contributions in XI */
-	/* Just for Greatest Contributor determination, don't sum with 'vp' var */
-	int16_t contributions_vp;
 
 	/* Total victory points (if game ended now) */
 	int16_t end_vp;
@@ -1014,9 +996,6 @@ typedef struct game
 	/* Disable takeovers in second (or later) expansion */
 	int8_t takeover_disabled;
 
-	/* Disable invasion game in Xeno Invasion */
-	int8_t invasion_disabled;
-
 	/* Include promo start worlds in deck */
 	int8_t promo;
 
@@ -1052,18 +1031,6 @@ typedef struct game
 
 	/* Takeover marked for failure */
 	int8_t takeover_defeated[MAX_TAKEOVER];
-
-	/* Current strength of the Xeno invaders */
-	int8_t xeno_strength;
-
-	/* Empire defeat tile */
-	int8_t defeat_tile;
-
-	/* Combine mil+xeno strength of all players */
-	int8_t combined_str;
-
-	/* Positions of admiral disks on repulse track */
-	player* repulse_track[MAX_PLAYER];
 
 	/* XXX Current kind of "any" good world */
 	int8_t oort_kind;
@@ -1106,7 +1073,6 @@ typedef struct campaign
 	int advanced;
 	int goal_disabled;
 	int takeover_disabled;
-	int invasion_disabled;
 
 	/* Campaign name */
 	char *name;

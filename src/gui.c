@@ -348,26 +348,17 @@ typedef struct mil_strength
 	/* Current temporary military against xeno*/
 	int bonus_xeno;
 
-	/* Current temporary defense against xeno attacks */
-	int bonus_xeno_defense;
-
 	/* Maximum additional temporary military */
 	int max_bonus;
 
 	/* Maximum additional temporary military against xeno */
 	int max_bonus_xeno;
 
-	/* Maximum additional temporary defence against xeno attacks */
-	int max_bonus_xeno_defense;
-
 	/* Additional military against rebel worlds */
 	int rebel;
 
 	/* Additional military against xeno worlds */
 	int xeno;
-
-	/* Additional defense against xeno attacks */
-	int xeno_defense;
 
 	/* Additional specific military */
 	int specific[MAX_GOOD];
@@ -583,7 +574,6 @@ static GtkWidget *player_area[MAX_PLAYER], *orig_area[MAX_PLAYER];
 static GtkWidget *player_status[MAX_PLAYER], *orig_status[MAX_PLAYER];
 static GtkWidget *player_box[MAX_PLAYER], *player_sep[MAX_PLAYER];
 static GtkWidget *goal_area;
-static GtkWidget *invasion_area;
 static GtkWidget *game_status;
 static GtkWidget *main_hbox, *lobby_vbox;
 static GtkWidget *phase_box, *action_box;
@@ -1770,7 +1760,7 @@ static int action_check_start(void)
 /*
  * Set of "extra info" structures for player statuses.
  */
-static struct extra_info status_extra_info[MAX_PLAYER][7];
+static struct extra_info status_extra_info[MAX_PLAYER][6];
 
 /*
  * Set of "extra info" structures for game status.
@@ -3118,10 +3108,6 @@ void redraw_goal(void)
 			y += 20;
 		}
 	}
-}
-
-void redraw_invasion()
-{
 }
 
 /*
@@ -4998,46 +4984,6 @@ static void redraw_status_area(int who, GtkWidget *box)
 		gtk_box_pack_start(GTK_BOX(box), image, FALSE, FALSE, 0);
 	}
 
-	/* Check for XI expansion and enabled Invasion game */
-	if (exp_info[real_game.expanded].has_invasion && !opt.disable_invasion)
-	{
-		int bmil  = s_ptr->military.base;
-		int xmil  = bmil + s_ptr->military.xeno;
-		int xdmil = xmil + s_ptr->military.xeno_defense;
-
-		/* Create victory point icon image */
-		buf = gdk_pixbuf_scale_simple(icon_cache[ICON_VP], height, height,
-			GDK_INTERP_BILINEAR);
-
-		/* Create image from pixbuf */
-		image = gtk_image_new_from_pixbuf(buf);
-
-		/* Pointer to extra info structure */
-		ei = &status_extra_info[who][6];
-
-		/* Create text for victory points */
-		sprintf(ei->text, "<b>%d\n%d</b>", xmil, xdmil);
-
-		/* Set font */
-		ei->fontstr = "Sans 10";
-
-		/* Draw text a border */
-		ei->border = 1;
-
-		/* Connect expose-event to draw extra text */
-		g_signal_connect_after(G_OBJECT(image), "expose-event",
-			G_CALLBACK(draw_extra_text), ei);
-
-		/* Destroy our copy of the icon */
-		g_object_unref(G_OBJECT(buf));
-
-		/* Add tooltip */
-		//gtk_widget_set_tooltip_markup(image, s_ptr->vp_tip);
-
-		/* Pack icon into status box */
-		gtk_box_pack_start(GTK_BOX(box), image, FALSE, FALSE, 0);
-	}
-
 	/* Loop over goals */
 	for (i = 0; i < MAX_GOAL; i++)
 	{
@@ -5358,7 +5304,6 @@ void redraw_everything(void)
 	redraw_table();
 	redraw_hand();
 	redraw_goal();
-	redraw_invasion();
 	redraw_phase();
 }
 
@@ -5475,29 +5420,6 @@ static void goal_allocated(GtkWidget *widget, GtkAllocation *allocation,
 
 	/* Redraw goal area */
 	redraw_goal();
-}
-
-/*
-* Invasion area is re-allocated.
-*/
-static void invasion_allocated(GtkWidget *widget, GtkAllocation *allocation,
-	gpointer data)
-{
-	static int old_width, old_height;
-
-	/* Check for no difference from before */
-	if (allocation->width == old_width && allocation->height == old_height)
-	{
-		/* Do nothing */
-		return;
-	}
-
-	/* Remember current size */
-	old_width = allocation->width;
-	old_height = allocation->height;
-
-	/* Redraw goal area */
-	redraw_invasion();
 }
 
 /*
@@ -5769,10 +5691,6 @@ static void compute_military(game *g, int who, mil_strength *m_ptr)
 			/* Check for military from hand */
 			if (o_ptr->code & P3_MILITARY_HAND)
 				hand_military += o_ptr->value;
-
-			/* Check for defense against Xenos */
-			if (!(o_ptr->code ^ P3_XENO_DEFENSE))
-				m_ptr->xeno_defense += o_ptr->value;
 
 			/* Skip non-military powers */
 			if (!(o_ptr->code & P3_EXTRA_MILITARY)) continue;
@@ -6655,13 +6573,6 @@ static void gui_choose_action(game *g, int who, int action[2], int one)
 			/* Skip button */
 			continue;
 		}
-
-		///* Skip produce repair if not playing invasion game */
-		//if (!invasion_enabled(g) && i == ACT_PRODUCE_REPAIR)
-		//{
-		//	/* Skip button */
-		//	continue;
-		//}
 
 		/* Create button */
 		action_toggle[i] = gtk_button_new();
@@ -10726,9 +10637,6 @@ static void apply_options(void)
 	/* Set takeover disabled */
 	real_game.takeover_disabled = opt.disable_takeover;
 
-	/* Set invasion disabled */
-	real_game.invasion_disabled = opt.disable_invasion;
-
 	/* Check for custom seed value */
 	if (opt.customize_seed)
 	{
@@ -10873,18 +10781,6 @@ void modify_gui(int reset_card)
 	{
 		/* Show goal area */
 		gtk_widget_show(goal_area);
-	}
-
-	/* Check for invasion disabled */
-	if (!invasion_enabled(&real_game))
-	{
-		/* Hide invasion area */
-		gtk_widget_hide(invasion_area);
-	}
-	else
-	{
-		/* Show invasion area */
-		gtk_widget_show(invasion_area);
 	}
 
 	/* Loop over existing players */
@@ -11389,8 +11285,6 @@ static void read_prefs(void)
 	                                          "no_goals", NULL);
 	opt.disable_takeover = g_key_file_get_boolean(pref_file, "game",
 	                                              "no_takeover", NULL);
-	opt.disable_invasion = g_key_file_get_boolean(pref_file, "game",
-		"no_invasion", NULL);
 	/* Read campaign options */
 	opt.campaign_name = g_key_file_get_string(pref_file, "game", "campaign",
 	                                          NULL);
@@ -11626,8 +11520,6 @@ void save_prefs(void)
 	g_key_file_set_boolean(pref_file, "game", "no_goals", opt.disable_goal);
 	g_key_file_set_boolean(pref_file, "game", "no_takeover",
 	                       opt.disable_takeover);
-	g_key_file_set_boolean(pref_file, "game", "no_invasion",
-		opt.disable_invasion);
 
 	/* Set campaign (if any) */
 	_key_file_set_string(pref_file, "game", "campaign", opt.campaign_name);
@@ -12333,7 +12225,6 @@ static GtkWidget *expansion_radio[MAX_EXPANSION];
 static GtkWidget *advanced_check;
 static GtkWidget *disable_goal_check;
 static GtkWidget *disable_takeover_check;
-static GtkWidget *disable_invasion_check;
 static GtkWidget *campaign_label, *seed_entry;
 
 /*
@@ -12466,23 +12357,6 @@ static void update_sensitivity()
 		/* Set takeover disabled checkbox sensitivity */
 		gtk_widget_set_sensitive(disable_takeover_check,
 		        exp_info[next_exp].has_takeovers);
-	}
-
-	/* Check if campaign specifies Invasion game */
-	if (camp && camp->invasion_disabled >= 0)
-	{
-		/* Set invasion disabled checkbox value */
-		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(disable_invasion_check),
-			camp->invasion_disabled);
-
-		/* Clear takeover disabled checkbox sensitivity */
-		gtk_widget_set_sensitive(disable_invasion_check, FALSE);
-	}
-	else
-	{
-		/* Set takeover disabled checkbox sensitivity */
-		gtk_widget_set_sensitive(disable_invasion_check,
-			exp_info[next_exp].has_invasion);
 	}
 }
 
@@ -13007,17 +12881,6 @@ static void gui_new_parameters(GtkMenuItem *menu_item, gpointer data)
 	/* Add checkbox to options box */
 	gtk_container_add(GTK_CONTAINER(options_box), disable_takeover_check);
 
-	/* Create check box for disabled invasion */
-	disable_invasion_check =
-		gtk_check_button_new_with_label("Disable invasion");
-
-	/* Set checkbox status */
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(disable_invasion_check),
-		opt.disable_invasion);
-
-	/* Add checkbox to options box */
-	gtk_container_add(GTK_CONTAINER(options_box), disable_invasion_check);
-
 	/* Create frame around buttons */
 	options_frame = gtk_frame_new("Game options");
 
@@ -13155,11 +13018,6 @@ static void gui_new_parameters(GtkMenuItem *menu_item, gpointer data)
 		opt.disable_takeover = exp_info[opt.expanded].has_takeovers &&
 		                gtk_toggle_button_get_active(
 		                     GTK_TOGGLE_BUTTON(disable_takeover_check));
-
-		/* Set invasion game disabled flag */
-		opt.disable_invasion = exp_info[opt.expanded].has_invasion &&
-			gtk_toggle_button_get_active(
-				GTK_TOGGLE_BUTTON(disable_invasion_check));
 
 		/* Set custom seed flag */
 		opt.customize_seed = gtk_toggle_button_get_active(
@@ -14704,10 +14562,9 @@ void flash_icon(int sound)
 #ifdef _WIN32
 	FLASHWINFO fi;
 
-	/* If game window is active don't play sound unless SOUND_ALWAYS specified */
+	/* If window is already active do nothing */
 	if (GetActiveWindow() == hw)
-		if (sound != SOUND_ALWAYS)
-			return 0;
+		return 0;
 
 	fi.hwnd = hw;
 	fi.cbSize = sizeof(FLASHWINFO);
@@ -14922,26 +14779,6 @@ int main(int argc, char *argv[])
 		{
 			/* Set takeovers off */
 			opt.disable_takeover = TRUE;
-
-			/* Start new game */
-			restart_loop = RESTART_NEW;
-		}
-
-		/* Check for invasion on */
-		else if (!strcmp(argv[i], "-i"))
-		{
-			/* Set invasion on */
-			opt.disable_invasion = FALSE;
-
-			/* Start new game */
-			restart_loop = RESTART_NEW;
-		}
-
-		/* Check for invasion off */
-		else if (!strcmp(argv[i], "-noi"))
-		{
-			/* Set invasion off */
-			opt.disable_invasion = TRUE;
 
 			/* Start new game */
 			restart_loop = RESTART_NEW;
@@ -15462,15 +15299,6 @@ int main(int argc, char *argv[])
 	/* Set goal area minimum width */
 	gtk_widget_set_size_request(goal_area, 70, 0);
 
-	/* Create area to display invasion game */
-	invasion_area = gtk_fixed_new();
-
-	/* Give widget its own window */
-	gtk_fixed_set_has_window(GTK_FIXED(invasion_area), TRUE);
-
-	/* Set goal area minimum width */
-	gtk_widget_set_size_request(invasion_area, 70, 0);
-
 	/* Create vbox for active card areas */
 	active_box = gtk_vbox_new(FALSE, 0);
 
@@ -15582,7 +15410,6 @@ int main(int argc, char *argv[])
 	gtk_box_pack_start(GTK_BOX(table_box), active_box, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(table_box), v_sep, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(table_box), goal_area, FALSE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(table_box), invasion_area, FALSE, TRUE, 0);
 
 	/* Create area for our hand of cards */
 	hand_area = gtk_fixed_new();
@@ -15598,10 +15425,6 @@ int main(int argc, char *argv[])
 	/* Redraw goal area when resized */
 	g_signal_connect(G_OBJECT(goal_area), "size-allocate",
 	                 G_CALLBACK(goal_allocated), NULL);
-
-	/* Redraw invasion area when resized */
-	g_signal_connect(G_OBJECT(invasion_area), "size-allocate",
-		G_CALLBACK(invasion_allocated), NULL);
 
 	/* Create box for action area */
 	action_box = gtk_hbox_new(FALSE, 0);

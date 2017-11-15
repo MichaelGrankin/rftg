@@ -60,7 +60,6 @@ expansion exp_info[] =
 	{
 		"Xeno Invasion", "XI", 4,
 		.max_players = 5,
-		.has_invasion = 1,
 		.has_start_world_choice = 1,
 	},
 	{
@@ -192,14 +191,6 @@ int goals_enabled(game *g)
 int takeovers_enabled(game *g)
 {
 	return exp_info[g->expanded].has_takeovers && !g->takeover_disabled;
-}
-
-/*
-* Return whether invasion is enabled in this game.
-*/
-int invasion_enabled(game *g)
-{
-	return exp_info[g->expanded].has_invasion && !g->invasion_disabled;
 }
 
 /*
@@ -830,11 +821,6 @@ static void gain_vps(game *g, int who, int num, char *reason)
 	}
 }
 
-static void gain_defense_award(game *g, int who, int num, char *reason)
-{
-	//TODO
-}
-
 /*
  * Spend some of a player's prestige.
  */
@@ -1040,9 +1026,6 @@ void clear_temp(game *g)
 
 		/* Clear bonus military */
 		p_ptr->bonus_military_xeno = 0;
-
-		/* Clear bonus defense */
-		p_ptr->bonus_defense_xeno = 0;
 
 		/* Clear bonus settle cost reduction */
 		p_ptr->bonus_reduce = 0;
@@ -13151,22 +13134,6 @@ static void game_information(game *g)
 			message_add_formatted(g, "Takeovers enabled.\n", FORMAT_TAKEOVER);
 		}
 	}
-
-	/* Check for invasion with XI */
-	if (exp_info[g->expanded].has_invasion)
-	{
-		/* Check for disabled takeovers */
-		if (g->invasion_disabled)
-		{
-			/* Send message */
-			message_add(g, "Invasion game off.\n");
-		}
-		else
-		{
-			/* Send message */
-			message_add_formatted(g, "Invasion game on.\n", FORMAT_TAKEOVER);
-		}
-	}
 }
 
 /*
@@ -14464,9 +14431,6 @@ static void score_game_player(game *g, int who)
 
 	/* Start with VP chips */
 	p_ptr->end_vp = p_ptr->vp;
-
-	if (invasion_enabled(g))
-		p_ptr->end_vp += p_ptr->defense_vp;
 
 	/* Start at first active card */
 	x = p_ptr->head[WHERE_ACTIVE];

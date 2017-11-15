@@ -1850,26 +1850,22 @@ static gboolean message_read(gpointer data)
 
 			/* See if the message @mentions us */
 			char atusername[64];
-			char *sptr = text;
+			char *ptr = text;
 
-			/* Check for @mentions if not currently playing a game */
-			if (!playing_game)
+			/* Construct "@username" string to search for */
+			strcpy(atusername, "@");
+			strcat(atusername, opt.username);
+
+			/* Check for all "@username" occurences */
+			while (ptr = strstr(ptr, atusername))
 			{
-				/* Construct "@username" string to search for */
-				strcpy(atusername, "@");
-				strcat(atusername, opt.username);
-
-				/* Check for all "@username" occurences */
-				while (sptr = strstr(sptr, atusername))
+				/* Now check that symbol after "@username" is illegal for usernames
+				  (non A-Z0-9_) so program doesn't notify "@user" if "@user12" was mentioned */
+				ptr = ptr + strlen(atusername);
+				if (!isalnum(*ptr) && *ptr != '_')
 				{
-					/* Now check that symbol after "@username" is illegal for usernames
-					  (non A-Z0-9_) so program doesn't notify "@user" if "@user12" was mentioned */
-					sptr = sptr + strlen(atusername);
-					if (!isalnum(*sptr) && *sptr != '_')
-					{
-						flash_icon(SOUND_ALWAYS);
-						break;
-					}
+					flash_icon(SOUND_ALWAYS);
+					break;
 				}
 			}
 
@@ -2806,7 +2802,6 @@ static GtkWidget *min_player, *max_player;
 static GtkWidget *advanced_check;
 static GtkWidget *disable_goal_check;
 static GtkWidget *disable_takeover_check;
-static GtkWidget *disable_invasion_check;
 
 /*
  * Current selection for create game options
@@ -2826,10 +2821,6 @@ static void update_sensitivity()
 	/* Set takeover disabled checkbox sensitivity */
 	gtk_widget_set_sensitive(disable_takeover_check,
 	                         exp_info[next_exp].has_takeovers);
-
-	/* Set invasion disabled checkbox sensitivity */
-	gtk_widget_set_sensitive(disable_invasion_check,
-		exp_info[next_exp].has_invasion);
 
 	/* Find maximum number of players */
 	max_p = exp_info[next_exp].max_players;
@@ -3115,17 +3106,6 @@ void create_dialog(GtkButton *button, gpointer data)
 	/* Add checkbox to options box */
 	gtk_container_add(GTK_CONTAINER(options_box), disable_takeover_check);
 
-	/* Create check box for disabled invasion game */
-	disable_invasion_check =
-		gtk_check_button_new_with_label("Disable invasion");
-
-	/* Set default */
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(disable_invasion_check),
-		opt.disable_invasion);
-
-	/* Add checkbox to options box */
-	gtk_container_add(GTK_CONTAINER(options_box), disable_invasion_check);
-
 	/* Create frame around buttons */
 	options_frame = gtk_frame_new("Game options");
 
@@ -3163,8 +3143,6 @@ void create_dialog(GtkButton *button, gpointer data)
 	                             GTK_TOGGLE_BUTTON(disable_goal_check));
 	opt.disable_takeover = gtk_toggle_button_get_active(
 	                             GTK_TOGGLE_BUTTON(disable_takeover_check));
-	opt.disable_invasion = gtk_toggle_button_get_active(
-		GTK_TOGGLE_BUTTON(disable_invasion_check));
 
 	/* Save change to file */
 	save_prefs();
@@ -3178,7 +3156,7 @@ void create_dialog(GtkButton *button, gpointer data)
 	    next_exp,
 	    gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(advanced_check)),
 	    gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(disable_goal_check)),
-	    gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(disable_takeover_check)), //TODO add invasion_check
+	    gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(disable_takeover_check)),
 	    0);
 
 	/* Destroy dialog */

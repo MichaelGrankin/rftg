@@ -602,11 +602,6 @@ int export_game(game *g, char *filename, char *style_sheet,
 		fprintf(fff, "    <Takeovers>%s</Takeovers>\n",
 		        g->takeover_disabled ? "off" : "on");
 
-	/* Check for expansion with invasion game */
-	if (exp_info[g->expanded].has_invasion)
-		fprintf(fff, "    <Invasion>%s</Invasion>\n",
-			g->invasion_disabled ? "off" : "on");
-
 	/* Write end tag */
 	fputs("  </Setup>\n", fff);
 

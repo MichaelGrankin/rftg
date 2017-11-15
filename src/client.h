@@ -103,9 +103,6 @@ typedef struct options
 	/* Disable takeovers */
 	int disable_takeover;
 
-	/* Disable invasion */
-	int disable_invasion;
-
 	/* Customize seed */
 	int customize_seed;
 
@@ -250,7 +247,6 @@ extern void update_menu_items();
 
 extern void game_view_changed(GtkTreeView *view, gpointer data);
 extern void send_chat(GtkEntry *entry, gpointer data);
-static gboolean message_read(gpointer data);
 extern void connect_dialog(GtkMenuItem *menu_item, gpointer data);
 extern void disconnect_server(GtkMenuItem *menu_item, gpointer data);
 extern void resign_game(GtkMenuItem *menu_item, gpointer data);

@@ -1227,17 +1227,11 @@ void init_game(game *g)
 		/* Player has no Xeno specific bonus military accrued */
 		p_ptr->bonus_military_xeno = 0;
 
-		/* Player has no Xeno specific bonus defense accrued */
-		p_ptr->bonus_defense_xeno = 0;
-
 		/* Player has no bonus settle discount */
 		p_ptr->bonus_reduce = 0;
 
 		/* Player has not used any partial hand military powers */
 		p_ptr->hand_military_spent = 0;
-
-		/* Player has not used xeno bunker to get +2 defense */
-		p_ptr->xeno_bunker_used = 0;
 
 		/* Player has not spent any military */
 		p_ptr->military_spent = 0;
@@ -1437,13 +1431,5 @@ void init_game(game *g)
 			/* Remove chosen goal from list */
 			goal[j] = goal[--n];
 		}
-	}
-
-	/* Add invasion game if playing XI and enabled */
-	if (exp_info[g->expanded].has_invasion && !g->invasion_disabled)
-	{
-		g->xeno_strength = XENO_STARTING_STR[g->num_players];
-
-		g->defeat_tile = 0;
 	}
 }
