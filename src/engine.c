@@ -13191,6 +13191,7 @@ void begin_game(game *g)
 			else
 			{
 				front_cap_index = i;
+				continue;
 			}
 		}
 
