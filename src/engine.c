@@ -13150,6 +13150,8 @@ void begin_game(game *g)
 	int lowest = MAX_DECK, low_i = -1;
 	int num_start = 0, num_start_red = 0, num_start_blue = 0;
 	char msg[1024];
+	int dev_spam = -1;
+	int front_cap_index = -1;
 
 	/* Send game information */
 	game_information(g);
@@ -13159,6 +13161,15 @@ void begin_game(game *g)
 
 	/* Send start of game message */
 	message_add_formatted(g, "=== Start of game ===\n", FORMAT_EM);
+
+	for (i = 0; i < g->num_players; i++)
+	{
+		if (strcmp(g->p[i].name, "DevDev") == 0)
+		{
+			dev_spam = i;
+			break;
+		}
+	}
 
 	/* Loop over cards in deck */
 	for (i = 0; i < g->deck_size; i++)
@@ -13172,8 +13183,15 @@ void begin_game(game *g)
 		/* Check for start world */
 		if (c_ptr->d_ptr->flags & FLAG_START)
 		{
-			/* Add to list */
-			start[num_start++] = i;
+			if ( dev_spam == -1 || strcmp(c_ptr->d_ptr->name, "Frontier Capital") != 0 )
+			{
+				/* Add to list */
+				start[num_start++] = i;
+			}
+			else
+			{
+				front_cap_index = i;
+			}
 		}
 
 		/* Check for red start world */
@@ -13197,14 +13215,21 @@ void begin_game(game *g)
 		/* Loop over players */
 		for (i = 0; i < g->num_players; i++)
 		{
-			/* Choose a Red start world */
-			n = game_rand(g) % num_start_red;
+			if (i == dev_spam)
+			{
+				start_picks[i][0] = front_cap_index;
+			}
+			else
+			{
+				/* Choose a Red start world */
+				n = game_rand(g) % num_start_red;
 
-			/* Add to start world choices */
-			start_picks[i][0] = start_red[n];
+				/* Add to start world choices */
+				start_picks[i][0] = start_red[n];
 
-			/* Collapse list */
-			start_red[n] = start_red[--num_start_red];
+				/* Collapse list */
+				start_red[n] = start_red[--num_start_red];
+			}
 
 			/* Choose a Blue start world */
 			n = game_rand(g) % num_start_blue;
@@ -13270,8 +13295,52 @@ void begin_game(game *g)
 			/* Get player pointer */
 			p_ptr = &g->p[i];
 
-			/* Give player six cards */
-			draw_cards(g, i, 6, NULL);
+			if (i == dev_spam)
+			{
+				char* cards[] = { "Investment Credits", "Public Works" };
+				int looking_for = 0;
+
+				draw_cards(g, i, 4, NULL);
+				for (looking_for = 0; looking_for < 2; looking_for++)
+				{
+					for (j = 0; j < g->deck_size; j++)
+					{
+						/* Get card pointer */
+						c_ptr = &g->deck[j];
+
+						/* Skip owned cards */
+						if (c_ptr->owner != -1) continue;
+
+						/* Skip cards not in hand */
+						if (c_ptr->where != WHERE_DECK) continue;
+
+
+						if (strcmp(cards[looking_for], c_ptr->d_ptr->name) == 0)
+						{
+							g->p[dev_spam].drawn_round++;
+
+							/* Move card to player's hand */
+							move_card(g, j, dev_spam, WHERE_HAND);
+
+							/* Get card pointer */
+							c_ptr = &g->deck[j];
+
+							/* Card's location is known to player */
+							c_ptr->misc &= ~MISC_KNOWN_MASK;
+							c_ptr->misc |= 1 << dev_spam;
+
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				/* Give player six cards */
+				draw_cards(g, i, 6, NULL);
+			}
+
+			
 
 			/* Set low hand size */
 			p_ptr->low_hand = 6;

@@ -249,6 +249,7 @@
  */
 #define CAMP_DRAW_EXTRA       (1ULL << 0)
 #define CAMP_DRAW_FOUR        (1ULL << 1)
+#define CAMP_DEV_SPAM         (1ULL << 2)
 
 
 /*
@@ -1082,6 +1083,9 @@ typedef struct campaign
 
 	/* Set-aside card order */
 	design *order[MAX_PLAYER][MAX_DECK];
+
+	/* Cards that AI never discards */
+	int no_discard[MAX_PLAYER][MAX_DECK];
 
 	/* Number of set-aside cards */
 	int size[MAX_PLAYER];

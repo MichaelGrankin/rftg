@@ -46,6 +46,7 @@ static char *camp_flags[] =
 {
 	"DRAW_EXTRA",
 	"DRAW_FOUR",
+	"DEV_SPAM",
 	NULL
 };
 
@@ -871,6 +872,13 @@ void read_campaign(void)
 					/* Start at beginning of next player */
 					n = 0;
 					break;
+				}
+
+				/* Check if AI is forbidden to discard this card */
+				if (*ptr == '!')
+				{
+					a_ptr->no_discard[who][n] = 1;
+					ptr++;
 				}
 
 				/* Check for random card */

@@ -3718,6 +3718,12 @@ static void ai_choose_action_advanced(game *g, int who, int action[2], int one)
 	action[0] = adv_combo[b_a][0];
 	action[1] = adv_combo[b_a][1];
 
+	if (g->camp && (g->camp->flags & CAMP_DEV_SPAM))
+	{
+		action[0] = ACT_DEVELOP;
+		action[1] = ACT_DEVELOP;
+	}
+
 	/* Predict our own actions */
 	predict_action(g, who, desired, who);
 
@@ -4202,6 +4208,11 @@ static void ai_choose_action(game *g, int who, int action[2], int one)
 	/* Select best action */
 	action[0] = role_out[best];
 
+	if (g->camp && (g->camp->flags & CAMP_DEV_SPAM))
+	{
+		action[0] = ACT_DEVELOP;
+	}
+
 	/* No second action */
 	action[1] = -1;
 
@@ -4425,9 +4436,22 @@ static void ai_choose_discard_aux_action(game *g, int who, int list[], int n,
 			/* Check for better score */
 			if (score_better(score, *b_s))
 			{
-				/* Save better choice */
-				*b_s = score;
-				*best = chosen;
+				int shouldnt_discard = 0;
+				for (int i = 0; i < num_discards; i++)
+				{
+					if (g->camp && (g->camp->no_discard[who][ discards[i] ]))
+					{
+						shouldnt_discard = 1;
+						break;
+					}
+				}
+
+				if (!shouldnt_discard)
+				{
+					/* Save better choice */
+					*b_s = score;
+					*best = chosen;
+				}
 			}
 		}
 
